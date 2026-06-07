@@ -710,7 +710,7 @@ window.generatePortInsight = async function(ticker, eps, roe) {
   regenBtn.style.display = 'none';
 
   try {
-    const res = await fetch('http://127.0.0.1:5000/analyze', {
+    const res = await fetch('https://ai-trading-dashboard-u84e.onrender.com/analyze', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ ticker, eps, roe })
@@ -774,7 +774,7 @@ window.generateOmniInsight = async function(ticker) {
   const price_info = `Entry: $${position.entry.toFixed(2)}, Current: $${position.current_price.toFixed(2)}, PnL: ${position.pnl_pct.toFixed(2)}%, Shares: ${position.shares}`;
 
   try {
-    const res = await fetch('http://127.0.0.1:5000/omni_analyze', {
+    const res = await fetch('https://ai-trading-dashboard-u84e.onrender.com/omni_analyze', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ ticker, market, strategy, price_info })
@@ -886,7 +886,7 @@ window.triggerAI = async function(ticker, eps, roe) {
   regenBtn.style.display = 'none';
   
   try {
-    const res = await fetch('http://127.0.0.1:5000/analyze', {
+    const res = await fetch('https://ai-trading-dashboard-u84e.onrender.com/analyze', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ ticker, eps, roe })
@@ -940,7 +940,7 @@ window.triggerPipeline = async function() {
   btn.disabled = true;
   
   try {
-    const res = await fetch('http://127.0.0.1:5000/run_pipeline', {
+    const res = await fetch('https://ai-trading-dashboard-u84e.onrender.com/run_pipeline', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ mode: window.currentMarketMode })
