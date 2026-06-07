@@ -1,0 +1,964 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>AI Trading Agency HQ - Professional</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet" />
+
+<script type="module">
+  import { initializeApp }              from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+  import { getFirestore, collection, query, orderBy, limit, onSnapshot, doc, getDocs, deleteDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyAk5VdyD3sL4eem-KHYHuVbpRXeD-xJxuI",
+    authDomain: "market-auto-1b573.firebaseapp.com",
+    projectId: "market-auto-1b573",
+    storageBucket: "market-auto-1b573.firebasestorage.app",
+    messagingSenderId: "26982827141",
+    appId: "1:26982827141:web:3f2d626e591abd254855ec",
+    measurementId: "G-8E8E5EMY4R"
+  };
+
+  const app  = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db   = getFirestore(app);
+
+  window.__FB = { auth, db, signInWithEmailAndPassword, signOut, onAuthStateChanged, collection, query, orderBy, limit, onSnapshot, doc, getDocs, deleteDoc, setDoc };
+</script>
+
+<style>
+/* ═══════════════════════════════════════════════
+   MODERN FINTECH THEME
+═══════════════════════════════════════════════ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:          #0f172a; 
+  --panel:       #1e293b; 
+  --panel2:      #334155; 
+  --border:      #334155;
+  
+  --neon-cyan:   #38bdf8; 
+  --neon-green:  #10b981; 
+  --neon-pink:   #ef4444; 
+  --neon-gold:   #f59e0b; 
+  --neon-purple: #8b5cf6; 
+  --neon-orange: #f97316; 
+  
+  --text:        #f8fafc; 
+  --text-dim:    #94a3b8; 
+  
+  --font-pixel:  'Inter', sans-serif;
+  --font-mono:   'Share Tech Mono', monospace;
+}
+
+html, body {
+  width: 100%; height: 100%;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-pixel);
+  font-size: 14px;
+  overflow-x: hidden;
+}
+
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--panel2); border-radius: 3px; }
+
+/* ── AUTH SCREEN ── */
+#auth-screen {
+  position: fixed; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--bg);
+  z-index: 1000;
+}
+.auth-box {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+  padding: 40px; width: 400px; max-width: 90vw;
+  display: flex; flex-direction: column; gap: 20px;
+}
+.auth-logo { text-align: center; font-weight: 700; font-size: 18px; color: var(--text); }
+.auth-logo span { display: block; font-size: 12px; font-weight: 400; color: var(--text-dim); margin-top: 8px; }
+.auth-input { background: var(--bg); border: 1px solid var(--border); border-radius: 6px; color: var(--text); padding: 12px; font-size: 14px; outline: none; width: 100%; }
+.auth-input:focus { border-color: var(--neon-cyan); }
+.auth-label { font-size: 12px; font-weight: 600; color: var(--text-dim); }
+.auth-field { display: flex; flex-direction: column; gap: 8px; }
+.btn-primary { background: var(--neon-cyan); color: #000; border: none; border-radius: 6px; font-weight: 600; font-size: 14px; padding: 12px; cursor: pointer; transition: 0.2s; }
+.btn-primary:hover { background: #7dd3fc; }
+.auth-error { color: var(--neon-pink); font-size: 12px; text-align: center; min-height: 14px; }
+
+/* ── DASHBOARD ── */
+#dashboard { display: none; flex-direction: column; min-height: 100vh; }
+#dashboard.visible { display: flex; }
+
+#topnav { background: var(--panel); border-bottom: 1px solid var(--border); padding: 12px 24px; display: flex; justify-content: space-between; align-items: center; }
+.nav-logo { font-weight: 700; font-size: 16px; color: var(--text); }
+.nav-logo small { display: block; font-size: 11px; color: var(--neon-cyan); font-weight: 500; }
+.nav-right { display: flex; gap: 16px; align-items: center; }
+.nav-user { font-size: 13px; color: var(--text-dim); }
+.btn-signout { background: transparent; border: 1px solid var(--border); color: var(--text-dim); border-radius: 4px; padding: 6px 12px; cursor: pointer; font-size: 12px; }
+.btn-signout:hover { color: var(--text); border-color: var(--text-dim); }
+
+#statusbar { background: var(--bg); border-bottom: 1px solid var(--border); padding: 8px 24px; display: flex; gap: 24px; font-size: 12px; color: var(--text-dim); overflow-x: auto; font-weight: 500; }
+.status-item { display: flex; gap: 8px; align-items: center; }
+.status-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--neon-green); }
+
+/* ── ISO SECTION ── */
+#iso-section { padding: 30px 20px 10px; display: flex; flex-direction: column; align-items: center; gap: 10px; max-width: 1500px; margin: 0 auto; width: 100%; }
+.section-title { font-weight: 600; font-size: 13px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px; }
+#iso-stage { position: relative; width: 860px; max-width: 100%; height: 460px; }
+.agent-desk { position: absolute; width: 148px; cursor: pointer; transition: transform 0.15s; user-select: none; }
+.agent-desk:hover { transform: translateY(-4px); filter: brightness(1.2); }
+.iso-box { position: absolute; width: 140px; height: 80px; }
+.desk-label { position: absolute; bottom: -20px; left: 50%; transform: translateX(-50%); font-weight: 600; font-size: 11px; white-space: nowrap; }
+.desk-1{left:30px;top:40px;} .desk-2{left:200px;top:40px;} .desk-3{left:370px;top:40px;} .desk-4{left:540px;top:40px;}
+.desk-5{left:30px;top:200px;} .desk-6{left:200px;top:200px;} .desk-7{left:370px;top:200px;} .desk-8{left:540px;top:200px;}
+
+/* ── ZONES ── */
+#zones { display: grid; grid-template-columns: 360px 1fr; grid-template-rows: auto auto; gap: 24px; padding: 20px 24px; max-width: 1500px; margin: 0 auto; width: 100%; }
+.zone { background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 20px; display: flex; flex-direction: column; gap: 16px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
+.zone-title { font-weight: 600; font-size: 14px; color: var(--text); padding-bottom: 12px; border-bottom: 1px solid var(--border); }
+
+#zone-pipeline { grid-column: 1; grid-row: 1 / 3; }
+.btn-start-pipeline { background: var(--panel2); border: 1px solid var(--border); color: var(--text); font-weight: 600; border-radius: 6px; padding: 16px; cursor: pointer; transition: 0.2s; }
+.btn-start-pipeline:hover { background: var(--border); }
+.pipeline-progress { display: flex; gap: 4px; }
+.prog-step { flex: 1; height: 6px; background: var(--bg); border-radius: 3px; transition: 0.3s; }
+#global-terminal { flex: 1; background: var(--bg); border-radius: 6px; padding: 12px; overflow-y: auto; font-size: 12px; font-family: var(--font-mono); color: var(--text-dim); min-height: 400px; max-height: 550px; }
+
+#zone-stocks { grid-column: 2; grid-row: 1; }
+.stock-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 16px; }
+.stock-card { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 16px; display: flex; flex-direction: column; gap: 8px; border-top: 3px solid var(--border); transition: transform 0.2s, box-shadow 0.2s; }
+.stock-card:hover { transform: translateY(-3px); box-shadow: 0 8px 16px rgba(0,0,0,0.3); }
+.stock-card.bullish { border-top-color: var(--neon-green); }
+.stock-card.bearish { border-top-color: var(--neon-pink); }
+.sc-ticker { font-weight: 700; font-size: 16px; color: var(--text); }
+.sc-price { font-family: var(--font-mono); font-size: 18px; color: var(--text); font-weight: bold; }
+.sc-meta { font-size: 11px; color: var(--text-dim); display: flex; flex-direction: column; gap: 4px; margin-top: 4px; }
+.sc-badge { font-weight: 600; font-size: 10px; padding: 4px 8px; background: var(--panel2); border-radius: 4px; color: var(--text); align-self: flex-start; margin-top: 4px; }
+
+#zone-portfolio { grid-column: 2; grid-row: 2; }
+.portfolio-summary { display: flex; gap: 32px; padding-bottom: 16px; border-bottom: 1px solid var(--border); margin-bottom: 16px; }
+.ps-item { display: flex; flex-direction: column; gap: 4px; }
+.ps-label { font-size: 11px; font-weight: 600; color: var(--text-dim); text-transform: uppercase; }
+.ps-value { font-family: var(--font-mono); font-size: 18px; color: var(--text); font-weight: bold; }
+table.ptable { width: 100%; font-size: 13px; border-spacing: 0 8px; border-collapse: separate; }
+table.ptable th { font-weight: 600; font-size: 11px; color: var(--text-dim); padding: 12px; text-align: left; }
+table.ptable td { padding: 12px; font-family: var(--font-mono); }
+.ptable tbody tr { background: var(--panel2); transition: 0.2s; }
+.ptable tbody tr:hover { filter: brightness(1.2); }
+.ptable tbody tr td:first-child { border-radius: 6px 0 0 6px; }
+.ptable tbody tr td:last-child { border-radius: 0 6px 6px 0; }
+.pnl-positive { color: var(--neon-green); font-weight: bold; }
+.pnl-negative { color: var(--neon-pink); font-weight: bold; }
+.ticker-cell { font-weight: 700; color: var(--text); font-family: var(--font-pixel); }
+.badge-long { color: var(--neon-green); font-weight: bold; font-size: 11px; }
+
+/* ── CONTROL BUTTONS ── */
+.btn-sm { background: var(--panel2); border: 1px solid var(--border); color: var(--text); border-radius: 4px; padding: 6px 10px; font-size: 11px; cursor: pointer; transition: 0.2s; font-weight: 600; }
+.btn-sm:hover { background: var(--border); }
+.btn-sm.btn-danger { color: var(--neon-pink); border-color: rgba(239,68,68,0.3); }
+.btn-sm.btn-danger:hover { background: rgba(239,68,68,0.1); border-color: var(--neon-pink); }
+.btn-sm.active { background: var(--neon-cyan); color: #000; border-color: var(--neon-cyan); }
+.btn-port { background: var(--neon-green); color: #000; border: none; font-weight:bold; }
+.btn-port:hover { filter: brightness(1.1); }
+.sc-checkbox { position: absolute; top: 16px; right: 16px; transform: scale(1.2); cursor: pointer; z-index: 10; }
+
+/* ── ANIMATIONS ── */
+@keyframes blink { 0% { opacity: 1; } 50% { opacity: 0; } 100% { opacity: 1; } }
+.live-dot { display: inline-block; width: 8px; height: 8px; background-color: var(--neon-green); border-radius: 50%; margin-left: 6px; animation: blink 1.5s infinite; vertical-align: middle; }
+
+/* ── MODAL ── */
+#modal-overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(4px); z-index: 2000; display: none; align-items: center; justify-content: center; }
+#modal-overlay.open { display: flex; }
+#agent-modal { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; width: 700px; max-width: 95vw; display: flex; flex-direction: column; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); overflow: hidden; }
+.modal-header { background: var(--panel2); padding: 16px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); }
+.modal-agent-id { font-weight: 700; font-size: 12px; }
+.modal-agent-name { font-weight: 600; font-size: 16px; margin-top: 4px; }
+.modal-close { background: transparent; border: none; color: var(--text-dim); cursor: pointer; font-size: 20px; }
+.modal-close:hover { color: var(--text); }
+.modal-tabs { display: flex; border-bottom: 1px solid var(--border); background: var(--panel); }
+.m-tab { padding: 12px 20px; font-weight: 600; font-size: 12px; color: var(--text-dim); cursor: pointer; border-bottom: 2px solid transparent; }
+.m-tab.active { color: var(--text); border-bottom-color: var(--neon-cyan); }
+.modal-body { padding: 20px; max-height: 60vh; overflow-y: auto; }
+.agent-terminal { background: var(--bg); border-radius: 6px; padding: 16px; font-family: var(--font-mono); font-size: 12px; color: var(--text-dim); line-height: 1.6; height: 300px; overflow-y: auto; }
+.agent-stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+.stat-box { background: var(--bg); padding: 16px; border-radius: 8px; border: 1px solid var(--border); }
+.stat-box .s-label { font-size: 11px; font-weight: 600; color: var(--text-dim); margin-bottom: 8px; }
+.stat-box .s-value { font-family: var(--font-mono); font-size: 20px; color: var(--text); font-weight: bold; }
+
+/* ── CUSTOM MODALS (AI & LOGS) ── */
+.custom-modal-overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(4px); z-index: 3000; display: none; align-items: center; justify-content: center; }
+.custom-modal-overlay.open { display: flex; }
+.custom-modal-box { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; width: 500px; max-width: 90vw; display: flex; flex-direction: column; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); overflow: hidden; }
+.custom-modal-header { background: var(--panel2); padding: 16px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); }
+.custom-modal-title { font-weight: 700; font-size: 15px; color: var(--text); display: flex; align-items: center; gap: 8px; }
+.custom-modal-close { background: transparent; border: none; color: var(--text-dim); cursor: pointer; font-size: 20px; transition: 0.2s; }
+.custom-modal-close:hover { color: var(--neon-pink); }
+.custom-modal-body { padding: 20px; max-height: 70vh; overflow-y: auto; font-size: 13px; line-height: 1.8; color: #e2e8f0; }
+.custom-modal-body h2 { color: var(--neon-cyan); margin-top: 16px; margin-bottom: 8px; font-size: 16px; border-bottom: 1px solid var(--border); padding-bottom: 4px; }
+.custom-modal-body b, .custom-modal-body strong { color: var(--neon-green); }
+.custom-modal-body li { margin-left: 20px; margin-bottom: 8px; }
+.log-item-row { display: flex; gap: 10px; align-items: center; padding: 6px 8px; border-radius: 4px; cursor: pointer; border-bottom: 1px solid rgba(51,65,85,0.4); transition: 0.2s; }
+.log-item-row:hover { background: var(--panel2); }
+.log-item-text { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.btn-log-detail { background: var(--bg); border: 1px solid var(--border); color: var(--neon-cyan); padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: bold; }
+</style>
+</head>
+<body>
+
+<div id="auth-screen">
+  <div class="auth-box">
+    <div class="auth-logo">AI TRADING DASHBOARD<span>AUTHORIZED ACCESS ONLY</span></div>
+    <div class="auth-field">
+      <div class="auth-label">Email</div>
+      <input id="auth-email" class="auth-input" type="email" placeholder="name@domain.com" autocomplete="off" />
+    </div>
+    <div class="auth-field">
+      <div class="auth-label">Password</div>
+      <input id="auth-pass" class="auth-input" type="password" placeholder="••••••••" />
+    </div>
+    <button class="btn-primary" id="btn-login">Sign In</button>
+    <div class="auth-error" id="auth-error"></div>
+  </div>
+</div>
+
+<div id="dashboard">
+  <nav id="topnav">
+    <div class="nav-logo">AI Trading Dashboard<small>System Live</small></div>
+    <div class="nav-right">
+      <div class="nav-user" id="nav-user-email">user@domain.com</div>
+      <button class="btn-signout" id="btn-signout">Sign Out</button>
+    </div>
+  </nav>
+
+  <div id="statusbar">
+    <div class="status-item"><div class="status-dot"></div>PIPELINE: ACTIVE</div>
+    <div class="status-item"><div class="status-dot"></div>FIRESTORE: CONNECTED</div>
+    <div class="status-item" id="clock-item"><div class="status-dot"></div><span id="clock">--:--:--</span></div>
+  </div>
+
+  <section id="iso-section">
+    <div class="section-title">Agent Workflow Topology</div>
+    <div id="iso-stage"></div>
+  </section>
+
+  <div id="zones">
+    <div class="zone" id="zone-pipeline">
+      <div class="zone-title">Pipeline Control</div>
+      <div style="display:flex; gap:8px; margin-bottom:12px;">
+        <button id="btn-mode-stocks" class="btn-sm active" onclick="setMarketMode('STOCKS')" style="flex:1; padding:10px; font-size:13px;">📈 STOCKS</button>
+        <button id="btn-mode-crypto" class="btn-sm" onclick="setMarketMode('CRYPTO')" style="flex:1; padding:10px; font-size:13px;">🪙 CRYPTO</button>
+      </div>
+      <button class="btn-start-pipeline" id="btn-pipeline" onclick="triggerPipeline()">Start Demo Pipeline</button>
+      <div class="pipeline-progress" id="pipe-progress"></div>
+      <div class="zone-title" style="margin-top: 16px; border: none; padding: 0;">System Logs</div>
+      <div id="global-terminal"></div>
+    </div>
+
+    <div class="zone" id="zone-stocks">
+      <div class="zone-title" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+        <span>Actionable Setups</span>
+        <div style="display:flex; gap:8px;">
+          <button id="btn-select-mode" class="btn-sm" onclick="toggleSelectMode()">Select Mode</button>
+          <button id="btn-delete-selected" class="btn-sm btn-danger" style="display:none;" onclick="deleteSelectedSignals()">Delete Selected</button>
+          <button id="btn-clear-all" class="btn-sm btn-danger" onclick="clearAllSignals()">Clear All</button>
+        </div>
+      </div>
+      <div class="stock-grid" id="stock-grid">
+        <div style="color:var(--text-dim);font-size:13px;padding:10px">Waiting for signals...</div>
+      </div>
+    </div>
+
+    <div class="zone" id="zone-portfolio">
+      <div class="zone-title">Live Portfolio</div>
+      <div class="portfolio-summary">
+        <div class="ps-item"><div class="ps-label">Positions</div><div class="ps-value" id="ps-positions">0</div></div>
+        <div class="ps-item"><div class="ps-label">Net PnL <span class="live-dot" title="Live Updates Active"></span></div><div class="ps-value" id="ps-pnl" style="color:var(--neon-green)">+0.00%</div></div>
+      </div>
+      <div style="overflow-x: auto;">
+        <table class="ptable" id="ptable">
+          <thead>
+            <tr><th>TICKER</th><th>SIDE</th><th>ENTRY</th><th>CURRENT</th><th>SL</th><th>TP</th><th>SIZE</th><th>PnL%</th><th>DATE ADDED</th><th>AI INSIGHTS</th><th>ACTION</th></tr>
+          </thead>
+          <tbody id="ptable-body">
+            <tr><td colspan="11" style="text-align:center;color:var(--text-dim);padding:20px">No active positions</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="modal-overlay">
+  <div id="agent-modal">
+    <div class="modal-header">
+      <div>
+        <div class="modal-agent-id" id="modal-agent-id">AGENT-00</div>
+        <div class="modal-agent-name" id="modal-agent-name">Name</div>
+      </div>
+      <button class="modal-close" id="modal-close">×</button>
+    </div>
+    <div class="modal-tabs">
+      <div class="m-tab active" data-tab="terminal">Log</div>
+      <div class="m-tab" data-tab="stats">Stats</div>
+      <div class="m-tab" data-tab="config">Config</div>
+    </div>
+    <div class="modal-body">
+      <div id="tab-terminal" class="tab-panel"><div class="agent-terminal" id="agent-terminal-log"></div></div>
+      <div id="tab-stats" class="tab-panel" style="display:none"><div class="agent-stats-grid" id="agent-stats-grid"></div></div>
+      <div id="tab-config" class="tab-panel" style="display:none"><div class="agent-terminal" id="agent-config-log" style="height:auto"></div></div>
+    </div>
+  </div>
+</div>
+
+<div id="ai-modal" class="custom-modal-overlay">
+  <div class="custom-modal-box">
+    <div class="custom-modal-header">
+      <div class="custom-modal-title" id="ai-modal-title">🤖 AI Insight</div>
+      <div style="display:flex; align-items:center; gap:8px;">
+        <button id="btn-regen-ai" class="btn-sm" style="display:none; background:var(--neon-purple); color:#fff; border:none;" onclick="regenerateAI()">🔄 Re-Gen</button>
+        <button class="custom-modal-close" onclick="closeCustomModal('ai-modal')">×</button>
+      </div>
+    </div>
+    <div class="custom-modal-body" id="ai-modal-body"></div>
+  </div>
+</div>
+
+<div id="log-modal" class="custom-modal-overlay">
+  <div class="custom-modal-box" style="width: 600px;">
+    <div class="custom-modal-header">
+      <div class="custom-modal-title" id="log-modal-title">📄 System Log Detail</div>
+      <button class="custom-modal-close" onclick="closeCustomModal('log-modal')">×</button>
+    </div>
+    <div class="custom-modal-body" id="log-modal-body" style="font-family: var(--font-mono); color: var(--neon-cyan); background: var(--bg); margin: 16px; border-radius: 6px; border: 1px solid var(--border); padding: 16px; white-space: pre-wrap;"></div>
+  </div>
+</div>
+
+<script>
+const AGENTS = [
+  { id: 1, key: 'scanner', name: 'Fundamental Scanner', color: '#38bdf8', config: { 'EPS_GROWTH': '> 5%', 'ROE': '> 5%' }, stats: [{ label: 'SCANNED', value: '1003' }] },
+  { id: 2, key: 'factor', name: 'Factor Analyst', color: '#10b981', config: { 'EMA': '9/21 Cross', 'RSI': '40-65' }, stats: [{ label: 'PASSED', value: '134' }] },
+  { id: 3, key: 'risk', name: 'Risk Manager', color: '#ef4444', config: { 'RISK_PER_TRADE': '1.5%' }, stats: [{ label: 'SIZED', value: '10' }] },
+  { id: 4, key: 'setup', name: 'Setup Planner', color: '#f59e0b', config: { 'SL_METHOD': '1.5x ATR' }, stats: [{ label: 'PLANNED', value: '10' }] },
+  { id: 5, key: 'trail', name: 'Trailing Monitor', color: '#8b5cf6', config: { 'TRAIL': '+1R / +2R' }, stats: [{ label: 'CHECKED', value: '10' }] },
+  { id: 6, key: 'notifier', name: 'Data Formatter', color: '#f97316', config: { 'FORMAT': 'JSON' }, stats: [{ label: 'FORMATTED', value: '10' }] },
+  { id: 7, key: 'logger', name: 'Firestore Logger', color: '#38bdf8', config: { 'DB': 'Cloud Firestore' }, stats: [{ label: 'WRITTEN', value: '20' }] },
+  { id: 8, key: 'updater', name: 'Portfolio Updater', color: '#10b981', config: { 'FREQ': '30 Min' }, stats: [{ label: 'UPDATED', value: '10' }] }
+];
+
+setInterval(() => {
+  const el = document.getElementById('clock');
+  if (el) el.textContent = new Date().toLocaleTimeString();
+}, 1000);
+
+function initAuth() {
+  const { auth, onAuthStateChanged } = window.__FB || {};
+  if (!auth) return;
+  onAuthStateChanged(auth, user => {
+    if (user) showDashboard(user);
+    else showAuthScreen();
+  });
+  document.getElementById('btn-login').addEventListener('click', handleLogin);
+  document.getElementById('btn-signout').addEventListener('click', () => window.__FB.signOut(auth));
+}
+
+function handleLogin() {
+  const { auth, signInWithEmailAndPassword } = window.__FB;
+  const email = document.getElementById('auth-email').value.trim();
+  const pass  = document.getElementById('auth-pass').value;
+  const errEl = document.getElementById('auth-error');
+  errEl.textContent = '';
+  if (!email || !pass) { errEl.textContent = 'Please enter email and password'; return; }
+  document.getElementById('btn-login').textContent = 'Signing in...';
+  signInWithEmailAndPassword(auth, email, pass).catch(err => {
+    errEl.textContent = err.message;
+    document.getElementById('btn-login').textContent = 'Sign In';
+  });
+}
+
+function showAuthScreen() {
+  document.getElementById('auth-screen').style.display = 'flex';
+  document.getElementById('dashboard').classList.remove('visible');
+}
+
+function showDashboard(user) {
+  document.getElementById('auth-screen').style.display = 'none';
+  document.getElementById('dashboard').classList.add('visible');
+  document.getElementById('nav-user-email').textContent = user.email;
+  buildIsoOffice();
+  buildPipelineProgress();
+  subscribeFirestore(user.uid);
+}
+
+function buildIsoOffice() {
+  const stage = document.getElementById('iso-stage');
+  stage.innerHTML = '';
+  AGENTS.forEach(agent => {
+    const desk = document.createElement('div');
+    desk.className = `agent-desk desk-${agent.id}`;
+    desk.innerHTML = `
+      <svg class="iso-box" viewBox="0 0 140 100" xmlns="http://www.w3.org/2000/svg">
+        <polygon points="70,10 130,40 70,70 10,40" fill="#1e293b" stroke="${agent.color}" stroke-width="2"/>
+        <polygon points="10,40 70,70 70,90 10,60" fill="#0f172a" stroke="${agent.color}" stroke-width="2"/>
+        <polygon points="130,40 70,70 70,90 130,60" fill="#1e293b" stroke="${agent.color}" stroke-width="2"/>
+        <text x="70" y="45" text-anchor="middle" font-size="14" fill="${agent.color}" font-weight="bold">A${agent.id}</text>
+      </svg>
+      <div class="desk-label" style="color:${agent.color}">${agent.name}</div>
+    `;
+    desk.addEventListener('click', () => openAgentModal(agent));
+    stage.appendChild(desk);
+  });
+}
+
+function buildPipelineProgress() {
+  const bar = document.getElementById('pipe-progress');
+  bar.innerHTML = '';
+  for (let i = 0; i < 8; i++) {
+    const s = document.createElement('div');
+    s.className = 'prog-step';
+    bar.appendChild(s);
+  }
+}
+
+function renderStockCards(stocks) {
+  const grid = document.getElementById('stock-grid');
+  grid.innerHTML = '';
+  if (!stocks || stocks.length === 0) {
+    grid.innerHTML = '<div style="color:var(--text-dim);font-size:13px;padding:10px">Waiting for signals...</div>';
+    return;
+  }
+  
+  stocks.forEach(s => {
+    const up = s.current_price >= s.entry;
+    const card = document.createElement('div');
+    card.className = `stock-card ${up ? 'bullish' : 'bearish'}`;
+    card.style.position = 'relative';
+
+    let checkboxHtml = '';
+    if (window.selectModeActive) {
+      checkboxHtml = `<input type="checkbox" class="sc-checkbox" value="${s._docId || s.signal_id}">`;
+    }
+
+    // เพิ่มปุ่ม [+ Add to Port] และปุ่ม AI คู่กัน
+    card.innerHTML = `
+      ${checkboxHtml}
+      <div style="display:flex; justify-content:space-between; align-items:flex-start">
+        <div class="sc-ticker">${s.ticker}</div>
+        <div class="sc-badge">${s.side}</div>
+      </div>
+      <div class="sc-price">$${s.entry.toFixed(2)}</div>
+      <div class="sc-meta">
+        <span>SL: $${s.sl.toFixed(2)}</span>
+        <span>TP: $${s.tp.toFixed(2)}</span>
+        <span>Shares: ${s.shares}</span>
+      </div>
+      <div style="font-size: 11px; color: var(--text-dim); margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--border);">
+        <div style="display:flex; gap: 4px; margin-bottom: 6px;">
+            <button class="btn-sm btn-port" style="flex:1;" onclick="addToPortfolio('${s._docId || s.signal_id}')">➕ Add to Port</button>
+            <button class="btn-sm" style="flex:1;" onclick="triggerAI('${s.ticker}', ${s.eps_growth || 0}, ${s.roe || 0})">🤖 AI Insight</button>
+        </div>
+      </div>`;
+    grid.appendChild(card);
+  });
+}
+
+function renderPortfolio(positions) {
+  window.currentPortfolio = positions; // Cache data
+  const tbody = document.getElementById('ptable-body');
+  tbody.innerHTML = '';
+  let totalPnl = 0;
+
+  if (positions.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="11" style="text-align:center;color:var(--text-dim);padding:20px">No active positions</td></tr>`;
+  } else {
+    positions.forEach(p => {
+      totalPnl += p.pnl_pct;
+      const row = document.createElement('tr');
+      const pnlClass = p.pnl_pct > 0 ? 'pnl-positive' : p.pnl_pct < 0 ? 'pnl-negative' : '';
+      
+      const stdButtonHtml = p.ai_insight 
+        ? `<button class="btn-sm" style="font-size:10px; padding: 4px 8px;" onclick="window.showStoredInsight('${p.ticker}')">👁️ View Insight</button>`
+        : `<button class="btn-sm" style="font-size:10px; padding: 4px 8px;" onclick="window.generatePortInsight('${p.ticker}', ${p.eps_growth || 0}, ${p.roe || 0})">🤖 Gen Insight</button>`;
+
+      const omniButtonHtml = p.omni_insight
+        ? `<button class="btn-sm" style="font-size:10px; padding: 4px 8px; background: rgba(139,92,246,0.2); color: var(--neon-purple); border-color: var(--neon-purple);" onclick="window.showStoredOmniInsight('${p.ticker}')">👁️ View Omni</button>`
+        : `<button class="btn-sm" style="font-size:10px; padding: 4px 8px; background: rgba(139,92,246,0.2); color: var(--neon-purple); border-color: var(--neon-purple);" onclick="window.generateOmniInsight('${p.ticker}')">🔮 Gen Omni</button>`;
+
+      let formattedDate = 'N/A';
+      if (p.date_opened) {
+        const d = new Date(p.date_opened);
+        if (!isNaN(d.getTime())) {
+          const mm = String(d.getMonth() + 1).padStart(2, '0');
+          const dd = String(d.getDate()).padStart(2, '0');
+          const hh = String(d.getHours()).padStart(2, '0');
+          const min = String(d.getMinutes()).padStart(2, '0');
+          formattedDate = `${mm}-${dd} ${hh}:${min}`;
+        } else {
+          formattedDate = p.date_opened; // Fallback for unexpectedly formatted dates
+        }
+      }
+
+      const lastUpdateFormatted = p.last_updated ? new Date(p.last_updated).toLocaleString() : 'N/A';
+
+      row.innerHTML = `
+        <td class="ticker-cell">${p.ticker}</td>
+        <td><span class="${p.side==='LONG'?'badge-long':'badge-short'}">${p.side}</span></td>
+        <td>$${p.entry.toFixed(2)}</td>
+        <td>
+          $${p.current_price.toFixed(2)}
+          <span title="Last updated: ${lastUpdateFormatted}" style="display:inline-block; margin-left:4px; font-size:10px; cursor:help; color:var(--neon-cyan); border:1px solid var(--neon-cyan); border-radius:50%; width:14px; height:14px; text-align:center; line-height:12px; font-family:var(--font-pixel);">i</span>
+        </td>
+        <td>$${p.sl.toFixed(2)}</td>
+        <td>$${p.tp.toFixed(2)}</td>
+        <td>${p.shares}</td>
+        <td class="${pnlClass}">${p.pnl_pct > 0 ? '+' : ''}${p.pnl_pct.toFixed(2)}%</td>
+        <td style="color:var(--text-dim);font-size:11px;font-weight:bold">${formattedDate}</td>
+        <td><div style="display:flex; gap:4px;">${stdButtonHtml}${omniButtonHtml}</div></td>
+        <td style="text-align:center"><button onclick="deletePosition('${p.ticker}')" style="background:transparent; border:1px solid var(--neon-pink); color:var(--neon-pink); border-radius:4px; padding:4px 8px; cursor:pointer; font-weight:bold; font-size:10px; transition:0.2s;" onmouseover="this.style.background='rgba(239,68,68,0.1)'" onmouseout="this.style.background='transparent'">✕</button></td>`;
+      tbody.appendChild(row);
+    });
+  }
+  
+  document.getElementById('ps-positions').textContent = positions.length;
+  const avgPnl = positions.length ? (totalPnl / positions.length) : 0;
+  document.getElementById('ps-pnl').textContent = (avgPnl >= 0 ? '+' : '') + avgPnl.toFixed(2) + '%';
+  document.getElementById('ps-pnl').style.color = avgPnl >= 0 ? 'var(--neon-green)' : 'var(--neon-pink)';
+}
+
+function subscribeFirestore(uid) {
+  const { db, collection, query, orderBy, limit, onSnapshot } = window.__FB;
+  window.currentSignals = [];
+  
+  onSnapshot(query(collection(db, 'users', uid, 'signals'), orderBy('timestamp', 'desc'), limit(10)), snap => {
+    window.currentSignals = snap.docs.map(d => ({ ...d.data(), _docId: d.id }));
+    renderStockCards(window.currentSignals);
+  });
+  onSnapshot(collection(db, 'users', uid, 'portfolio'), snap => {
+    renderPortfolio(snap.docs.map(d => d.data()));
+  });
+
+  onSnapshot(query(collection(db, 'users', uid, 'pipeline_logs'), orderBy('timestamp', 'desc'), limit(50)), snap => {
+    const term = document.getElementById('global-terminal');
+    term.innerHTML = '';
+    const docs = snap.docs.slice().reverse();
+    docs.forEach(d => {
+      const data = d.data();
+      const color = data.level === 'ERROR' ? 'var(--neon-pink)' : 'var(--text)';
+      const time = new Date(data.timestamp).toLocaleTimeString();
+      
+      const row = document.createElement('div');
+      row.className = 'log-item-row';
+      row.style.justifyContent = 'space-between';
+      
+      row.innerHTML = `
+        <span>
+          <span style="color:var(--text-dim)">[${time}]</span> 
+          <span style="font-weight:bold; color:${color}">[${data.agent}]</span>
+        </span>
+        <button class="btn-log-detail">Detail Log</button>
+      `;
+      
+      const openModalFunc = () => {
+        document.getElementById('log-modal').classList.add('open');
+        document.getElementById('log-modal-title').textContent = `📄 Agent: ${data.agent}`;
+        document.getElementById('log-modal-body').textContent = data.message;
+      };
+
+      row.querySelector('.btn-log-detail').onclick = openModalFunc;
+      row.onclick = openModalFunc;
+      term.appendChild(row);
+    });
+    term.scrollTop = term.scrollHeight;
+  });
+}
+
+function openAgentModal(agent) {
+  document.getElementById('modal-agent-id').textContent = `A${agent.id}`;
+  document.getElementById('modal-agent-id').style.color = agent.color;
+  document.getElementById('modal-agent-name').textContent = agent.name;
+  switchModalTab('terminal');
+  document.getElementById('agent-terminal-log').innerHTML = `<div class="log-msg">Logs are streamed to global terminal...</div>`;
+  
+  const grid = document.getElementById('agent-stats-grid');
+  grid.innerHTML = agent.stats.map(s => `<div class="stat-box"><div class="s-label">${s.label}</div><div class="s-value" style="color:${agent.color}">${s.value}</div></div>`).join('');
+  
+  document.getElementById('agent-config-log').textContent = Object.entries(agent.config).map(([k,v]) => `${k} = ${v}`).join('\n');
+  document.getElementById('modal-overlay').classList.add('open');
+}
+
+function switchModalTab(name) {
+  document.querySelectorAll('.m-tab').forEach(t => t.classList.toggle('active', t.dataset.tab === name));
+  document.querySelectorAll('.tab-panel').forEach(p => p.style.display = 'none');
+  document.getElementById(`tab-${name}`).style.display = 'block';
+}
+
+document.getElementById('modal-overlay').addEventListener('click', e => { if (e.target === document.getElementById('modal-overlay')) document.getElementById('modal-overlay').classList.remove('open'); });
+document.getElementById('modal-close').addEventListener('click', () => document.getElementById('modal-overlay').classList.remove('open'));
+document.querySelectorAll('.m-tab').forEach(t => t.addEventListener('click', () => switchModalTab(t.dataset.tab)));
+
+// ฟังก์ชันใหม่: เพิ่มหุ้นจากหน้า Signal ลง Live Portfolio
+window.addToPortfolio = async function(signalId) {
+  const { db, auth, doc, setDoc, deleteDoc } = window.__FB;
+  const user = auth.currentUser;
+  if (!user) return;
+
+  const signal = window.currentSignals.find(s => s._docId === signalId || s.signal_id === signalId);
+  if (!signal) return;
+
+  const ticker = signal.ticker;
+  const portfolioData = {
+    ticker: ticker,
+    side: signal.side || "LONG",
+    entry: signal.entry,
+    sl: signal.sl,
+    tp: signal.tp,
+    tp1: signal.tp1 || 0,
+    shares: signal.shares,
+    position_value: signal.position_value,
+    current_price: signal.entry, // ตอนเข้าพอร์ต ราคาเริ่มต้นคือราคา Entry
+    pnl_pct: 0.0,
+    status: "NEW",
+    signal_id: signal.signal_id,
+    date_opened: new Date().toISOString(), // Now storing the full ISO timestamp (e.g. 2024-05-15T14:30:00.000Z)
+    last_updated: new Date().toISOString(),
+    eps_growth: signal.eps_growth || 0,
+    roe: signal.roe || 0
+  };
+
+  try {
+    // 1. เพิ่มลงในคอลเลกชัน Portfolio
+    await setDoc(doc(db, 'users', user.uid, 'portfolio', ticker), portfolioData);
+    // 2. ลบออกจากหน้า Actionable Setups (Signal) เพื่อไม่ให้รก
+    await deleteDoc(doc(db, 'users', user.uid, 'signals', signalId));
+    
+    // แจ้งเตือนความสำเร็จเบาๆ มุมบนขวา (คุณสามารถเปลี่ยนเป็น Alert ธรรมดาได้)
+    console.log(`${ticker} added to Live Portfolio!`);
+  } catch (err) {
+    alert("Error adding to portfolio: " + err.message);
+  }
+};
+
+window.deletePosition = async function(ticker) {
+  const { db, auth, doc, deleteDoc } = window.__FB;
+  const user = auth.currentUser;
+  if (!user) { alert("User not authenticated."); return; }
+  
+  if (confirm(`Are you sure you want to remove ${ticker} from your portfolio?`)) {
+    try {
+      await deleteDoc(doc(db, 'users', user.uid, 'portfolio', ticker));
+    } catch (err) { alert("Failed to delete position: " + err.message); }
+  }
+};
+
+window.showStoredInsight = function(ticker) {
+  window.activeAITicker = ticker;
+  window.activeAIType = 'std';
+  
+  if (!window.currentPortfolio) return;
+  const position = window.currentPortfolio.find(p => p.ticker === ticker);
+  if (!position || !position.ai_insight) return;
+
+  const modal = document.getElementById('ai-modal');
+  const title = document.getElementById('ai-modal-title');
+  const body = document.getElementById('ai-modal-body');
+  const regenBtn = document.getElementById('btn-regen-ai');
+
+  modal.classList.add('open');
+  title.textContent = `👁️ Stored AI Insight: ${ticker}`;
+  regenBtn.style.display = 'inline-block';
+
+  try {
+    const insight = JSON.parse(position.ai_insight);
+    body.innerHTML = `
+      <div style="background: #0f172a; padding: 10px; border-radius: 6px; border: 1px solid #334155;">
+        <div style="color: #38bdf8; font-weight:bold;">Score: ${insight.quality_score} | ${insight.valuation_status}</div>
+        <ul style="margin: 10px 0 0 0; padding-left: 20px; font-size: 12px; display:flex; flex-direction:column; gap:6px;">
+          ${insight.investment_thesis.split('\\n').map(pt => `<li>${pt.replace(/^- /, '')}</li>`).join('')}
+        </ul>
+      </div>
+    `;
+  } catch (e) {
+    body.innerHTML = `<div style="white-space: pre-wrap;">${position.ai_insight}</div>`;
+  }
+};
+
+window.generatePortInsight = async function(ticker, eps, roe) {
+  window.activeAITicker = ticker;
+  window.activeAIType = 'std';
+  
+  const { db, auth, doc, setDoc } = window.__FB;
+  const user = auth.currentUser;
+  if (!user) {
+    alert("Authentication required to generate and save insight.");
+    return;
+  }
+
+  const modal = document.getElementById('ai-modal');
+  const title = document.getElementById('ai-modal-title');
+  const body = document.getElementById('ai-modal-body');
+  const regenBtn = document.getElementById('btn-regen-ai');
+
+  modal.classList.add('open');
+  title.textContent = `🤖 Generating AI Insight: ${ticker}`;
+  body.innerHTML = '<div style="text-align:center; color:var(--text-dim); padding:20px;">Contacting Agent 9 for deep analysis... ⏳</div>';
+  regenBtn.style.display = 'none';
+
+  try {
+    const res = await fetch('http://127.0.0.1:5000/analyze', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ticker, eps, roe })
+    });
+    
+    if (!res.ok) {
+      const errText = await res.text();
+      let errMsg = `HTTP ${res.status}: Backend connection failed`;
+      try {
+        const errJson = JSON.parse(errText);
+        errMsg = errJson.error || errMsg;
+      } catch (e) {
+        if (errText) errMsg += ` - ${errText}`;
+      }
+      throw new Error(errMsg);
+    }
+
+    const data = await res.json();
+
+    await setDoc(doc(db, 'users', user.uid, 'portfolio', ticker), { ai_insight: data.analysis }, { merge: true });
+    
+    regenBtn.style.display = 'inline-block';
+    title.textContent = `👁️ Stored AI Insight: ${ticker}`;
+    try {
+        const insight = JSON.parse(data.analysis);
+        body.innerHTML = `
+          <div style="background: #0f172a; padding: 10px; border-radius: 6px; border: 1px solid #334155;">
+            <div style="color: #38bdf8; font-weight:bold;">Score: ${insight.quality_score} | ${insight.valuation_status}</div>
+            <ul style="margin: 10px 0 0 0; padding-left: 20px; font-size: 12px; display:flex; flex-direction:column; gap:6px;">
+              ${insight.investment_thesis.split('\\n').map(pt => `<li>${pt.replace(/^- /, '')}</li>`).join('')}
+            </ul>
+          </div>
+        `;
+    } catch (e) { body.innerHTML = `<div style="white-space: pre-wrap;">${data.analysis}</div>`; }
+  } catch (err) { body.innerHTML = `<span style="color: var(--neon-pink);">Error generating insight:<br/><br/>${err.message}</span>`; }
+};
+
+window.generateOmniInsight = async function(ticker) {
+  window.activeAITicker = ticker;
+  window.activeAIType = 'omni';
+  const regenBtn = document.getElementById('btn-regen-ai');
+  regenBtn.style.display = 'none';
+
+  const { db, auth, doc, setDoc } = window.__FB;
+  const user = auth.currentUser;
+  if (!user) { alert("Authentication required"); return; }
+  
+  const position = window.currentPortfolio.find(p => p.ticker === ticker);
+  if (!position) return;
+
+  const modal = document.getElementById('ai-modal');
+  const title = document.getElementById('ai-modal-title');
+  const body = document.getElementById('ai-modal-body');
+
+  modal.classList.add('open');
+  title.textContent = `🔮 Generating OmniTrader Insight: ${ticker}`;
+  body.innerHTML = '<div style="text-align:center; color:var(--text-dim); padding:20px;">OmniTrader is analyzing multi-factor data... ⏳</div>';
+
+  const market = ticker.endsWith('-USD') ? 'CRYPTO' : 'STOCKS';
+  const strategy = 'SWING';
+  const price_info = `Entry: $${position.entry.toFixed(2)}, Current: $${position.current_price.toFixed(2)}, PnL: ${position.pnl_pct.toFixed(2)}%, Shares: ${position.shares}`;
+
+  try {
+    const res = await fetch('http://127.0.0.1:5000/omni_analyze', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ticker, market, strategy, price_info })
+    });
+
+    if (!res.ok) {
+      const errText = await res.text();
+      let errMsg = `HTTP ${res.status}: Backend connection failed`;
+      try {
+        const errJson = JSON.parse(errText);
+        errMsg = errJson.error || errMsg;
+      } catch (e) {
+        if (errText) errMsg += ` - ${errText}`;
+      }
+      throw new Error(errMsg);
+    }
+
+    const data = await res.json();
+    
+    await setDoc(doc(db, 'users', user.uid, 'portfolio', ticker), { omni_insight: data.analysis }, { merge: true });
+    
+    body.innerHTML = `<div style="white-space: pre-wrap; font-size: 13px;">${data.analysis}</div>`;
+    regenBtn.style.display = 'inline-block';
+    title.textContent = `🔮 OmniTrader Insight: ${ticker}`;
+  } catch (err) {
+    body.innerHTML = `<span style="color: var(--neon-pink);">Error generating insight:<br/><br/>${err.message}</span>`;
+  }
+};
+
+window.showStoredOmniInsight = function(ticker) {
+  window.activeAITicker = ticker;
+  window.activeAIType = 'omni';
+  const regenBtn = document.getElementById('btn-regen-ai');
+  
+  const position = window.currentPortfolio.find(p => p.ticker === ticker);
+  if (!position || !position.omni_insight) return;
+
+  const modal = document.getElementById('ai-modal');
+  const title = document.getElementById('ai-modal-title');
+  const body = document.getElementById('ai-modal-body');
+
+  modal.classList.add('open');
+  title.textContent = `🔮 OmniTrader Insight: ${ticker}`;
+  regenBtn.style.display = 'inline-block';
+  body.innerHTML = `<div style="white-space: pre-wrap; font-size: 13px;">${position.omni_insight}</div>`;
+};
+
+window.regenerateAI = function() {
+  const ticker = window.activeAITicker;
+  const type = window.activeAIType;
+  if (!ticker || !type) return;
+
+  const position = window.currentPortfolio.find(p => p.ticker === ticker);
+  if (!position) {
+    console.error("Position not found. Cannot regenerate AI insight.");
+    return;
+  }
+
+  if (type === 'std') {
+    window.generatePortInsight(ticker, position.eps_growth || 0, position.roe || 0);
+  } else if (type === 'omni') {
+    window.generateOmniInsight(ticker);
+  } else {
+    console.warn(`Unknown AI type: ${type}`);
+  }
+};
+
+window.selectModeActive = false;
+
+window.currentMarketMode = 'STOCKS';
+window.setMarketMode = function(mode) {
+  window.currentMarketMode = mode;
+  document.getElementById('btn-mode-stocks').classList.toggle('active', mode === 'STOCKS');
+  document.getElementById('btn-mode-crypto').classList.toggle('active', mode === 'CRYPTO');
+};
+
+window.toggleSelectMode = function() {
+  window.selectModeActive = !window.selectModeActive;
+  const btn = document.getElementById('btn-select-mode');
+  const delBtn = document.getElementById('btn-delete-selected');
+  
+  if (window.selectModeActive) {
+    btn.classList.add('active');
+    btn.textContent = 'Cancel Select';
+    delBtn.style.display = 'inline-block';
+  } else {
+    btn.classList.remove('active');
+    btn.textContent = 'Select Mode';
+    delBtn.style.display = 'none';
+  }
+  
+  if (window.currentSignals) {
+    renderStockCards(window.currentSignals);
+  }
+};
+
+window.closeCustomModal = function(id) { document.getElementById(id).classList.remove('open'); };
+
+window.triggerAI = async function(ticker, eps, roe) {
+  window.activeAITicker = null; // Prevent regen for actionable setups lacking port context
+  const modal = document.getElementById('ai-modal');
+  const title = document.getElementById('ai-modal-title');
+  const body = document.getElementById('ai-modal-body');
+  const regenBtn = document.getElementById('btn-regen-ai');
+
+  modal.classList.add('open');
+  title.textContent = `🤖 AI Insight: ${ticker}`;
+  body.innerHTML = '<div style="text-align:center; color:var(--text-dim); padding:20px;">Generating deep analysis... ⏳</div>';
+  regenBtn.style.display = 'none';
+  
+  try {
+    const res = await fetch('http://127.0.0.1:5000/analyze', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ticker, eps, roe })
+    });
+    
+    if (!res.ok) throw new Error("Backend connection failed");
+    const data = await res.json();
+    
+    try {
+        const insight = JSON.parse(data.analysis);
+        body.innerHTML = `
+          <div style="background: #0f172a; padding: 10px; border-radius: 6px; border: 1px solid #334155;">
+            <div style="color: #38bdf8; font-weight:bold;">Score: ${insight.quality_score} | ${insight.valuation_status}</div>
+            <ul style="margin: 10px 0 0 0; padding-left: 20px; font-size: 12px; display:flex; flex-direction:column; gap:6px;">
+              ${insight.investment_thesis.split('\n').map(pt => `<li>${pt.replace(/^- /, '')}</li>`).join('')}
+            </ul>
+          </div>
+        `;
+    } catch (e) {
+        body.innerHTML = `<div style="white-space: pre-wrap;">${data.analysis}</div>`;
+    }
+  } catch (err) {
+    body.innerHTML = `<span style="color: var(--neon-pink);">Error: ${err.message}</span>`;
+  }
+};
+
+window.deleteSelectedSignals = async function() {
+  const checkboxes = document.querySelectorAll('.sc-checkbox:checked');
+  if (checkboxes.length === 0) { alert("No signals selected."); return; }
+  if (!confirm(`Are you sure you want to delete ${checkboxes.length} selected signal(s)?`)) return;
+  
+  const { db, auth, deleteDoc, doc } = window.__FB;
+  const user = auth.currentUser;
+  if (!user) return;
+  
+  try {
+    const deletePromises = Array.from(checkboxes).map(cb => deleteDoc(doc(db, 'users', user.uid, 'signals', cb.value)));
+    await Promise.all(deletePromises);
+    window.toggleSelectMode();
+  } catch (e) {
+    alert("Failed to delete selected signals: " + e.message);
+  }
+};
+
+window.triggerPipeline = async function() {
+  const btn = document.getElementById('btn-pipeline');
+  const originalText = btn.textContent;
+  
+  btn.textContent = '⏳ Initializing Scan...';
+  btn.classList.add('running');
+  btn.disabled = true;
+  
+  try {
+    const res = await fetch('http://127.0.0.1:5000/run_pipeline', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ mode: window.currentMarketMode })
+    });
+    if (!res.ok) throw new Error("Backend connection failed");
+    btn.textContent = '🚀 Scanning Universe (Check Terminal)';
+  } catch (err) {
+    alert("Failed to start pipeline: " + err.message);
+  }
+  
+  setTimeout(() => {
+    btn.textContent = originalText;
+    btn.classList.remove('running');
+    btn.disabled = false;
+  }, 5000);
+};
+
+window.addEventListener('load', initAuth);
+</script>
+</body>
+</html>

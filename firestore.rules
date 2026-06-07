@@ -1,0 +1,35 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ─── User-scoped data ────────────────────────────────────────────────────
+    // Every document lives under /users/{uid}/... so a user can ONLY
+    // read/write their own data.  No cross-user access, no unauthenticated
+    // access.
+
+    match /users/{uid}/{document=**} {
+      allow read, write: if request.auth != null && request.auth.uid == uid;
+    }
+
+    // ─── Signals sub-collection ──────────────────────────────────────────────
+    match /users/{uid}/signals/{signalId} {
+      allow read, write: if request.auth != null && request.auth.uid == uid;
+    }
+
+    // ─── Portfolio positions sub-collection ─────────────────────────────────
+    match /users/{uid}/portfolio/{positionId} {
+      allow read, write: if request.auth != null && request.auth.uid == uid;
+    }
+
+    // ─── Pipeline run logs sub-collection ───────────────────────────────────
+    match /users/{uid}/pipeline_logs/{logId} {
+      allow read, write: if request.auth != null && request.auth.uid == uid;
+    }
+
+    // ─── Deny everything else ────────────────────────────────────────────────
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

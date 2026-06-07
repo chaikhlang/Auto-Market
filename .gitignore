@@ -1,0 +1,12 @@
+# ไฟล์สำคัญ ห้ามอัปเดตเด็ดขาด
+.env
+serviceAccountKey.json
+
+# ไฟล์ขยะและโฟลเดอร์ระบบ
+__pycache__/
+*.pyc
+.DS_Store
+.vscode/
+
+# ไฟล์ Logs (ถ้ามี)
+*.log
